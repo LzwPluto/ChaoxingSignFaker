@@ -106,7 +106,7 @@ dependencies {
     implementation(libs.coil.network.okhttp)
     implementation libs.accompanist.permissions
     implementation libs.baidumapsdk.location
-    implementation libs.stackbricks
+    // implementation libs.stackbricks
     implementation libs.common
     implementation libs.asms
     implementation libs.kotlinx.serialization.json
