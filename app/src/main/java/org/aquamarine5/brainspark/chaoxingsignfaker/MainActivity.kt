@@ -1,0 +1,643 @@
+/*
+ * Copyright (c) 2025-2026, @aquamarine5 (@海蓝色的咕咕鸽). All Rights Reserved.
+ * Author: aquamarine5@163.com (Github: https://github.com/aquamarine5) and Brainspark (previously RenegadeCreation)
+ * Repository: https://github.com/aquamarine5/ChaoxingSignFaker
+ */
+
+package org.aquamarine5.brainspark.chaoxingsignfaker
+
+import android.content.Intent
+import android.content.pm.PackageManager.GET_META_DATA
+import android.os.Bundle
+import android.os.Debug
+import android.widget.Toast
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.BadgedBox
+import androidx.compose.material.BottomNavigation
+import androidx.compose.material.BottomNavigationItem
+import androidx.compose.material.ContentAlpha
+import androidx.compose.material3.Badge
+import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
+import androidx.navigation.NavDestination.Companion.hasRoute
+import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.navigation
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
+import coil3.ImageLoader
+import coil3.disk.DiskCache
+import coil3.disk.directory
+import coil3.network.okhttp.OkHttpNetworkFetcherFactory
+import coil3.request.crossfade
+import com.baidu.location.LocationClient
+import com.baidu.mapapi.SDKInitializer
+import com.umeng.analytics.MobclickAgent
+import io.sentry.Sentry
+import io.sentry.android.core.SentryAndroid
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import org.aquamarine5.brainspark.chaoxingsignfaker.api.ChaoxingHttpClient
+import org.aquamarine5.brainspark.chaoxingsignfaker.components.CenterCircularProgressIndicator
+import org.aquamarine5.brainspark.chaoxingsignfaker.entity.ChaoxingIMGroup
+import org.aquamarine5.brainspark.chaoxingsignfaker.entity.ChaoxingSignActivityEntity
+import org.aquamarine5.brainspark.chaoxingsignfaker.entity.NavigationBarItemData
+import org.aquamarine5.brainspark.chaoxingsignfaker.screen.CourseDetailDestination
+import org.aquamarine5.brainspark.chaoxingsignfaker.screen.CourseDetailScreen
+import org.aquamarine5.brainspark.chaoxingsignfaker.screen.CourseListDestination
+import org.aquamarine5.brainspark.chaoxingsignfaker.screen.CourseListScreen
+import org.aquamarine5.brainspark.chaoxingsignfaker.screen.GestureSignDestination
+import org.aquamarine5.brainspark.chaoxingsignfaker.screen.GestureSignScreen
+import org.aquamarine5.brainspark.chaoxingsignfaker.screen.GetLocationDestination
+import org.aquamarine5.brainspark.chaoxingsignfaker.screen.GroupDetailDestination
+import org.aquamarine5.brainspark.chaoxingsignfaker.screen.GroupDetailScreen
+import org.aquamarine5.brainspark.chaoxingsignfaker.screen.GroupListDestination
+import org.aquamarine5.brainspark.chaoxingsignfaker.screen.GroupListScreen
+import org.aquamarine5.brainspark.chaoxingsignfaker.screen.LocationSignScreen
+import org.aquamarine5.brainspark.chaoxingsignfaker.screen.LoginDestination
+import org.aquamarine5.brainspark.chaoxingsignfaker.screen.LoginPage
+import org.aquamarine5.brainspark.chaoxingsignfaker.screen.OtherUserDestination
+import org.aquamarine5.brainspark.chaoxingsignfaker.screen.OtherUserGraphDestination
+import org.aquamarine5.brainspark.chaoxingsignfaker.screen.OtherUserScreen
+import org.aquamarine5.brainspark.chaoxingsignfaker.screen.PasswordSignDestination
+import org.aquamarine5.brainspark.chaoxingsignfaker.screen.PasswordSignScreen
+import org.aquamarine5.brainspark.chaoxingsignfaker.screen.PhotoSignDestination
+import org.aquamarine5.brainspark.chaoxingsignfaker.screen.PhotoSignScreen
+import org.aquamarine5.brainspark.chaoxingsignfaker.screen.QRCodeSignDestination
+import org.aquamarine5.brainspark.chaoxingsignfaker.screen.QRCodeSignScreen
+import org.aquamarine5.brainspark.chaoxingsignfaker.screen.SettingDestination
+import org.aquamarine5.brainspark.chaoxingsignfaker.screen.SettingGraphDestination
+import org.aquamarine5.brainspark.chaoxingsignfaker.screen.SettingScreen
+import org.aquamarine5.brainspark.chaoxingsignfaker.screen.SignGraphDestination
+import org.aquamarine5.brainspark.chaoxingsignfaker.screen.WelcomeDestination
+import org.aquamarine5.brainspark.chaoxingsignfaker.screen.WelcomeScreen
+import org.aquamarine5.brainspark.chaoxingsignfaker.ui.theme.ChaoxingSignFakerTheme
+import org.aquamarine5.brainspark.chaoxingsignfaker.ui.theme.Orange
+import org.aquamarine5.brainspark.stackbricks.StackbricksPolicy
+import org.aquamarine5.brainspark.stackbricks.StackbricksService
+import org.aquamarine5.brainspark.stackbricks.providers.qiniu.QiniuConfiguration
+import org.aquamarine5.brainspark.stackbricks.providers.qiniu.QiniuMessageProvider
+import org.aquamarine5.brainspark.stackbricks.providers.qiniu.QiniuPackageProvider
+import org.aquamarine5.brainspark.stackbricks.rememberStackbricksStatus
+import java.util.concurrent.TimeUnit
+import kotlin.reflect.typeOf
+
+class MainActivity : ComponentActivity() {
+    companion object {
+        const val INTENT_EXTRA_EXIT_FLAG = "intent_extra_exit_flag"
+        const val CLASS_TAG = "MainActivity"
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        val versionData = packageManager.getPackageInfo(
+            packageName,
+            GET_META_DATA
+        )
+        SentryAndroid.init(this) {
+            if (Debug.isDebuggerConnected()) {
+                it.isEnabled = false
+            }
+
+            val versionName = versionData.versionName!!
+            if (versionName.contains("rc"))
+                it.environment = "rc"
+            else if (versionName.contains("beta"))
+                it.environment = "beta"
+            else if (versionName.contains("alpha")) {
+                it.environment = "alpha"
+                it.isAnrEnabled = false
+            } else
+                it.environment = "stable"
+
+            it.beforeSend = { event, hint ->
+                event.apply {
+                    (throwable as? ChaoxingParseDataException)?.let {
+                        setExtra("data", it.data ?: "null")
+                    }
+                }
+            }
+        }
+        UMengHelper.preInit(this)
+        enableEdgeToEdge()
+        setContent {
+            val hapticFeedback = LocalHapticFeedback.current
+            val navController = rememberNavController()
+            var isNewVersionAvailable by remember {
+                mutableStateOf(false)
+            }
+            var destination by remember { mutableStateOf<Any?>(null) }
+            val snackbarHostState = remember { SnackbarHostState() }
+            val imageLoader = remember {
+                ImageLoader.Builder(applicationContext).components {
+                    add(
+                        OkHttpNetworkFetcherFactory(
+                            callFactory = { ChaoxingHttpClient.instance!!.okHttpClient })
+                    )
+                }.diskCache {
+                    DiskCache.Builder()
+                        .directory(applicationContext.cacheDir.resolve("image_cache"))
+                        .maxSizePercent(0.02)
+                        .build()
+                }.crossfade(true).build()
+            }
+            ChaoxingSignFakerTheme {
+                CompositionLocalProvider(LocalSnackbarHostState provides snackbarHostState) {
+                    Scaffold(
+                        snackbarHost = {
+                            SnackbarHost(hostState = snackbarHostState)
+                        },
+                        bottomBar = {
+                            val navBackStackEntry by navController.currentBackStackEntryAsState()
+                            val currentDestination = navBackStackEntry?.destination
+                            val isNoBottomNavigationBar by remember(currentDestination) {
+                                mutableStateOf(
+                                    listOf(
+                                        WelcomeDestination::class,
+                                        LoginDestination::class
+                                    ).any { currentDestination?.hasRoute(it) ?: false }.not()
+                                )
+                            }
+                            AnimatedVisibility(
+                                isNoBottomNavigationBar,
+                                enter = expandVertically(),
+                                exit = shrinkVertically()
+                            ) {
+                                BottomNavigation(
+                                    backgroundColor = MaterialTheme.colorScheme.primaryContainer,
+                                    elevation = 14.dp
+                                ) {
+                                    val bottomBarItem = listOf(
+                                        NavigationBarItemData(
+                                            SignGraphDestination,
+                                            "签到",
+                                            painterResource(R.drawable.ic_clipboard_pen_line)
+                                        ),
+                                        NavigationBarItemData(
+                                            OtherUserGraphDestination,
+                                            "代签",
+                                            painterResource(R.drawable.ic_users_round)
+                                        ),
+                                        NavigationBarItemData(
+                                            SettingGraphDestination,
+                                            "设置",
+                                            painterResource(R.drawable.ic_settings)
+                                        )
+                                    )
+                                    bottomBarItem.forEach { item ->
+                                        val isSelected =
+                                            currentDestination?.hierarchy?.any { it.hasRoute(item.destination::class) } == true
+                                        BottomNavigationItem(
+                                            isSelected,
+                                            onClick = {
+                                                if (destination != null) {
+                                                    hapticFeedback.performHapticFeedback(
+                                                        HapticFeedbackType.ContextClick
+                                                    )
+                                                    runCatching {
+                                                        if (isSelected) {
+                                                            navController.navigate(item.destination) {
+                                                                popUpTo(item.destination) {
+                                                                    inclusive = false
+                                                                }
+                                                                launchSingleTop = true
+                                                            }
+                                                        } else {
+                                                            navController.navigate(item.destination) {
+                                                                popUpTo(navController.graph.findStartDestination().id) {
+                                                                    saveState = true
+                                                                }
+                                                                launchSingleTop = true
+                                                                restoreState = true
+                                                            }
+                                                        }
+                                                    }.onFailure {
+                                                        Sentry.captureException(it)
+                                                        it.printStackTrace()
+                                                    }
+                                                }
+                                            },
+                                            icon = {
+                                                val iconColor by animateColorAsState(
+                                                    if (isSelected) LocalContentColor.current else
+                                                        LocalContentColor.current.copy(ContentAlpha.medium),
+                                                    tween(300)
+                                                )
+                                                CompositionLocalProvider(LocalContentColor provides iconColor) {
+                                                    Column {
+                                                        Spacer(modifier = Modifier.size(1.5.dp))
+                                                        BadgedBox(badge = {
+                                                            if (item.name == "设置" && isNewVersionAvailable) {
+                                                                Box(contentAlignment = Alignment.Center) {
+                                                                    Badge(
+                                                                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                                                        modifier = Modifier
+                                                                            .size(16.dp)
+                                                                            .zIndex(0f)
+                                                                    )
+                                                                    Badge(
+                                                                        containerColor = Orange,
+                                                                        modifier = Modifier
+                                                                            .size(10.dp)
+                                                                            .zIndex(10f)
+                                                                    )
+                                                                }
+                                                            }
+                                                        }) {
+                                                            Icon(
+                                                                item.icon,
+                                                                contentDescription = item.name,
+                                                                modifier = Modifier.size(26.dp)
+                                                            )
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            label = {
+                                                Column {
+                                                    Spacer(modifier = Modifier.size(1.5.dp))
+                                                    Text(item.name, fontSize = 12.sp)
+                                                }
+                                            },
+                                            alwaysShowLabel = false
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    ) { innerPadding ->
+                        val stackbricksService = QiniuConfiguration(
+                            possibleConfigurations = listOf(
+                                "cdn.aquamarine5.fun" to "chaoxingsignfaker_stackbricks_v2_manifest.json",
+                                "cdn.aquamarine5.top" to "chaoxingsignfaker_stackbricks_v2_manifest.json",
+                                "cdn.aquamarine5.vip" to "chaoxingsignfaker_stackbricks_v2_manifest.json",
+                            ),
+                            referer = "http://cdn.aquamarine5.fun/",
+                            okHttpClient = OkHttpClient.Builder()
+                                .callTimeout(20, TimeUnit.MINUTES)
+                                .readTimeout(20, TimeUnit.MINUTES)
+                                .writeTimeout(20, TimeUnit.MINUTES)
+                                .retryOnConnectionFailure(true)
+                                .build()
+                        ).let {
+                            val state = rememberStackbricksStatus()
+                            remember {
+                                StackbricksService(
+                                    this,
+                                    QiniuMessageProvider(it),
+                                    QiniuPackageProvider(it),
+                                    state,
+                                    stackbricksPolicy = StackbricksPolicy(
+                                        versionName = BuildConfig.VERSION_NAME,
+                                        isAllowedToDisableCheckUpdateOnLaunch = false,
+                                        isForceInstallValueCallback = false,
+                                        versionCode = null
+                                    ),
+                                )
+                            }
+                        }
+                        Column(
+                            modifier = Modifier
+                                .background(MaterialTheme.colorScheme.background)
+                                .padding(innerPadding)
+                                .fillMaxSize()
+                        ) {
+                            LaunchedEffect(Unit) {
+                                withContext(Dispatchers.IO) {
+                                    val datastore =
+                                        applicationContext.chaoxingDataStore.data.first()
+                                    if (datastore.agreeTerms) {
+                                        UMengHelper.init(applicationContext)
+                                        LocationClient.setAgreePrivacy(true)
+                                        SDKInitializer.setAgreePrivacy(applicationContext, true)
+                                    }
+                                    isDevelopedMode = datastore.preferences.isDevelopedMode
+                                    destination =
+                                        when {
+                                            !datastore.agreeTerms -> WelcomeDestination
+                                            !datastore.hasLoginSession() -> LoginDestination()
+                                            else -> {
+                                                runCatching {
+                                                    ChaoxingHttpClient.loadFromDataStore(
+                                                        datastore,
+                                                        applicationContext
+                                                    )
+                                                    coroutineScope {
+                                                        launch {
+                                                            if (UMengHelper.md5(
+                                                                    packageManager.getApplicationLabel(
+                                                                        versionData.applicationInfo!!
+                                                                    ).toString()
+                                                                ) != "181b23fb3bfa29181fcde41f72757e97" && UMengHelper.md5(
+                                                                    packageName
+                                                                ) != "717670698be98532464cfc122894908b"
+                                                            ) {
+                                                                UMengHelper.onIllegalChannelEvent(
+                                                                    this@MainActivity,
+                                                                    versionData
+                                                                )
+                                                                MobclickAgent.onKillProcess(this@MainActivity)
+                                                                throw ChaoxingPredictableException.ApplicationIllegalChannelException()
+                                                            }
+                                                        }
+                                                    }
+                                                    return@runCatching SignGraphDestination
+                                                }.getOrElse {
+                                                    withContext(Dispatchers.Main) {
+                                                        Toast.makeText(
+                                                            applicationContext,
+                                                            "初始化客户端失败，可能是网络问题或登录过期。",
+                                                            Toast.LENGTH_SHORT
+                                                        ).show()
+                                                    }
+                                                    LoginDestination(isFailureNetworkRedirect = true)
+                                                }
+                                            }
+                                        }
+
+                                }
+                            }
+                            if (destination == null) {
+                                CenterCircularProgressIndicator(isDelay = false)
+                            } else
+                                NavHost(
+                                    navController,
+                                    destination!!,
+                                    enterTransition = {
+                                        fadeIn(
+                                            animationSpec = tween(300)
+                                        )
+                                    },
+                                    exitTransition = {
+                                        fadeOut(
+                                            animationSpec = tween(300)
+                                        )
+                                    },
+                                ) {
+                                    navigation<SignGraphDestination>(startDestination = CourseListDestination) {
+                                        composable<CourseListDestination> {
+                                            CourseListScreen(
+                                                stackbricksService,
+                                                imageLoader,
+                                                navToDetailDestination = {
+                                                    navController.navigate(it)
+                                                },
+                                                onNewVersionAvailable = {
+                                                    isNewVersionAvailable = true
+                                                },
+                                                navToSignActivityDestination = {
+                                                    navController.navigate(it)
+                                                },
+                                                navToSettingDestination = {
+                                                    navController.navigate(SettingDestination) {
+                                                        popUpTo<CourseListDestination> {
+                                                            inclusive = true
+                                                            saveState = true
+                                                        }
+                                                        restoreState = true
+                                                    }
+                                                }, navToLoginDestination = {
+                                                    navController.navigate(LoginDestination(true)) {
+                                                        popUpTo<CourseListDestination> {
+                                                            inclusive = true
+                                                            saveState = true
+                                                        }
+                                                        restoreState = true
+                                                    }
+                                                }, navToGroupDestination = {
+                                                    navController.navigate(GroupListDestination)
+                                                })
+                                        }
+                                        composable<GroupDetailDestination>(
+                                            typeMap = mapOf(
+                                                typeOf<ChaoxingIMGroup>() to ChaoxingIMGroup.ChaoxingIMGroupNavType
+                                            )
+                                        ) {
+                                            GroupDetailScreen(
+                                                it.toRoute(),
+                                                navToGroupListDestination = {
+                                                    navController.navigateUp()
+                                                },
+                                                onSignAction = {
+                                                    navController.navigate(it)
+                                                })
+                                        }
+
+                                        composable<GroupListDestination> {
+                                            GroupListScreen(imageLoader) { destination ->
+                                                navController.navigate(destination)
+                                            }
+                                        }
+
+                                        composable<QRCodeSignDestination> { entry ->
+                                            QRCodeSignScreen(entry.toRoute(), navToOtherSign = {
+                                                navController.navigate(it)
+                                            }, navToOtherUser = {
+                                                navController.navigate(OtherUserGraphDestination) {
+                                                    popUpTo<SignGraphDestination> {
+                                                        saveState = true
+                                                        inclusive = true
+                                                    }
+                                                    restoreState = true
+                                                }
+                                            }) {
+                                                navController.navigateUp()
+                                            }
+                                        }
+
+                                        composable<GetLocationDestination>(
+                                            typeMap = mapOf(
+                                                typeOf<ChaoxingSignActivityEntity>() to ChaoxingSignActivityEntity.SignActivityNavType
+                                            )
+                                        ) {
+                                            LocationSignScreen(
+                                                it.toRoute(), navToOtherSign = {
+                                                    navController.navigate(it)
+                                                },
+                                                navToCourseDetailDestination = {
+                                                    navController.navigateUp()
+                                                }) {
+                                                navController.navigate(OtherUserGraphDestination) {
+                                                    popUpTo<SignGraphDestination> {
+                                                        saveState = true
+                                                        inclusive = true
+                                                    }
+                                                    restoreState = true
+                                                }
+                                            }
+                                        }
+
+                                        composable<CourseDetailDestination> {
+                                            CourseDetailScreen(
+                                                it.toRoute(),
+                                                navToSignerDestination = { destination ->
+                                                    navController.navigate(destination)
+                                                }) {
+                                                navController.navigateUp()
+                                            }
+                                        }
+
+                                        composable<PhotoSignDestination> {
+                                            PhotoSignScreen(it.toRoute(), navToOtherSign = {
+                                                navController.navigate(it)
+                                            }, navBack = {
+                                                navController.navigateUp()
+                                            }) {
+                                                navController.navigate(OtherUserGraphDestination) {
+                                                    popUpTo<SignGraphDestination> {
+                                                        saveState = true
+                                                        inclusive = true
+                                                    }
+                                                    restoreState = true
+                                                }
+                                            }
+                                        }
+
+                                        composable<GestureSignDestination> { route ->
+                                            GestureSignScreen(
+                                                route.toRoute(), navToOtherSign = {
+                                                    navController.navigate(it)
+                                                },
+                                                navToCourseDetailDestination = {
+                                                    navController.navigateUp()
+                                                }) {
+                                                navController.navigate(OtherUserGraphDestination) {
+                                                    popUpTo<SignGraphDestination> {
+                                                        saveState = true
+                                                        inclusive = true
+                                                    }
+                                                    restoreState = true
+                                                }
+                                            }
+                                        }
+
+                                        composable<PasswordSignDestination> { route ->
+                                            PasswordSignScreen(
+                                                route.toRoute(), navToOtherSign = {
+                                                    navController.navigate(it)
+                                                },
+                                                navToCourseDetailDestination = {
+                                                    navController.navigateUp()
+                                                }) {
+                                                navController.navigate(OtherUserGraphDestination) {
+                                                    popUpTo<SignGraphDestination> {
+                                                        saveState = true
+                                                        inclusive = true
+                                                    }
+                                                    restoreState = true
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    navigation<OtherUserGraphDestination>(startDestination = OtherUserDestination) {
+                                        composable<OtherUserDestination> {
+                                            OtherUserScreen {
+                                                navController.navigateUp()
+                                            }
+                                        }
+                                    }
+
+                                    navigation<SettingGraphDestination>(startDestination = SettingDestination) {
+                                        composable<SettingDestination> {
+                                            SettingScreen(stackbricksService, imageLoader) {
+                                                navController.navigate(LoginDestination()) {
+                                                    popUpTo<SettingDestination> { inclusive = true }
+                                                }
+                                            }
+                                        }
+                                    }
+
+
+                                    composable<WelcomeDestination> {
+                                        WelcomeScreen {
+                                            navController.navigate(LoginDestination()) {
+                                                popUpTo<WelcomeDestination> { inclusive = true }
+                                            }
+                                        }
+                                    }
+
+                                    composable<LoginDestination> {
+                                        LoginPage(it.toRoute(), stackbricksService) {
+                                            navController.navigate(CourseListDestination) {
+                                                popUpTo<LoginDestination> { inclusive = true }
+                                            }
+                                        }
+                                    }
+                                }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        if (intent.getBooleanExtra(INTENT_EXTRA_EXIT_FLAG, false)) {
+            finish()
+        }
+        super.onNewIntent(intent)
+    }
+
+    override fun onResume() {
+        MobclickAgent.onResume(this)
+        super.onResume()
+    }
+
+    override fun onPause() {
+        MobclickAgent.onPause(this)
+        super.onPause()
+    }
+
+    override fun onStop() {
+        MobclickAgent.onKillProcess(this)
+        super.onStop()
+    }
+
+    override fun onDestroy() {
+        MobclickAgent.onKillProcess(this)
+        super.onDestroy()
+    }
+}

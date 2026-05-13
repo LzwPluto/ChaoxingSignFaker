@@ -1,0 +1,72 @@
+/*
+ * Copyright (c) 2025-2026, @aquamarine5 (@海蓝色的咕咕鸽). All Rights Reserved.
+ * Author: aquamarine5@163.com (Github: https://github.com/aquamarine5) and Brainspark (previously RenegadeCreation)
+ * Repository: https://github.com/aquamarine5/ChaoxingSignFaker
+ */
+
+package org.aquamarine5.brainspark.chaoxingsignfaker.components
+
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
+import org.aquamarine5.brainspark.chaoxingsignfaker.R
+import kotlin.random.Random
+
+private const val SPONSOR_DIALOG_SHOW_RATE = 99
+
+@Composable
+fun SponsorPopupDialog() {
+    var isShowDialog by remember { mutableStateOf(Random.nextInt(100) < SPONSOR_DIALOG_SHOW_RATE) }
+    val isShowSponsor = remember { mutableStateOf(false) }
+    val hapticFeedback = LocalHapticFeedback.current
+    if (isShowDialog)
+        AlertDialog(onDismissRequest = {
+            isShowDialog = false
+        }, icon = {
+            Icon(
+                painterResource(R.drawable.ic_heart_handshake),
+                null,
+                tint = MaterialTheme.colorScheme.primary
+            )
+        }, title = {
+            Text("应用还好用嘛？")
+        }, text = {
+            Text(buildAnnotatedString {
+                append("随地大小签虽然每次使用不需要付费，但是用于更新的服务器资源还是需要")
+                withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
+                    append("持续花费很多钱的！")
+                }
+                append(":(")
+            })
+        }, confirmButton = {
+            Button(onClick = {
+                hapticFeedback.performHapticFeedback(HapticFeedbackType.ContextClick)
+                isShowSponsor.value = true
+                isShowDialog = false
+            }) { Text("现在就去") }
+        }, dismissButton = {
+            OutlinedButton(onClick = {
+                isShowDialog = false
+            }) { Text("下次一定") }
+        })
+    if (isShowSponsor.value) {
+        SponsorAlertDialog {
+            isShowSponsor.value = false
+        }
+    }
+}

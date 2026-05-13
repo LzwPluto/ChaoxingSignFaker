@@ -1,0 +1,111 @@
+syntax = "proto3";
+
+option java_package = "org.aquamarine5.brainspark.chaoxingsignfaker.datastore";
+option java_multiple_files = true;
+
+// Copyright (c) 2025-2026, @aquamarine5 (@海蓝色的咕咕鸽). All Rights Reserved.
+// Author: aquamarine5@163.com (Github: https://github.com/aquamarine5) and Brainspark (previously RenegadeCreation)
+// Repository: https://github.com/aquamarine5/ChaoxingSignFaker
+
+message ChaoxingSignFakerDataStore{
+  repeated ChaoxingLocation locations = 1;
+  ChaoxingLoginSession loginSession = 2;
+  repeated ChaoxingOtherUserSession otherUsers = 4;
+  ChaoxingAnalysis analysis = 7;
+  bool agreeTerms = 3;
+  string deviceCode = 5 [deprecated = true];
+  repeated uint32 preferCourse = 6;
+  repeated uint32 preferClassId = 8;
+  map<uint32, RecommendRecordList> recommendRecords = 9;
+  repeated RecommendHabit recommendHabits = 10;
+  bool disableRecommend = 11;
+  uint32 version = 12;
+  repeated ChaoxingCourseClass preferCourseClass = 13;
+  bool bypassBlockedChecking = 14;
+  uint32 tagsIncreaseId = 16;
+  repeated OtherUserTagType tagsLibrary = 15;
+  LearntTooltip learntTooltips = 17;
+  Preferences preferences = 18;
+}
+
+message Preferences{
+  bool neverAskSaveFavoriteLocation = 1;
+  bool isDevelopedMode = 2;
+}
+
+message ChaoxingCourseClass{
+  uint32 courseId = 1;
+  uint32 classId = 2;
+}
+
+message LearntTooltip{
+  bool tagsFeature = 1 [deprecated = true];
+  bool cameraSelectedFromGallery = 2;
+  bool mapSupportNormalSatelliteSwitch = 3;
+  bool supportFavoriteLocation = 4;
+  bool qrcodeSupportScanFromGallery = 5;
+}
+
+message OtherUserTagType{
+  uint32 id = 1;
+  string name = 2;
+  uint64 color = 3;
+}
+
+message ChaoxingAnalysis{
+  uint32 locationSign = 1;
+  uint32 qrcodeSign = 2;
+  uint32 photoSign = 3;
+  uint32 clickSign = 4;
+  uint32 gestureSign = 5;
+  uint32 otherUserSign = 6;
+  uint32 passwordSign = 7;
+}
+
+message ChaoxingLocation{
+  string address = 3;
+  string label = 6;
+  double latitude = 4;
+  double longitude = 5;
+}
+
+message ChaoxingLoginSession{
+  repeated HttpCookie cookies = 1;
+  string phoneNumber = 2;
+  string password = 3;
+  string faceImageObjectId = 4;
+}
+
+message ChaoxingOtherUserSession{
+  repeated HttpCookie cookies = 1;
+  string phoneNumber = 2;
+  string password = 3;
+  string name = 4;
+  repeated uint32 tags = 5;
+  string faceImageObjectId = 6;
+}
+
+message HttpCookie{
+  string host = 1;
+  string name = 2;
+  string value = 3;
+}
+
+message RecommendRecordList{
+  repeated RecommendRecord records = 1;
+}
+
+message RecommendRecord{
+  uint32 dayOfWeek = 1;
+  uint32 minuteOfDay = 2;
+  uint32 courseId = 3;
+}
+
+message RecommendHabit{
+  uint32 dayOfWeek = 1;
+  uint32 minuteOfDay = 2;
+  uint32 classId = 3;
+  uint32 courseId = 5;
+  uint32 recordCount = 4;
+  string className = 6;
+}
