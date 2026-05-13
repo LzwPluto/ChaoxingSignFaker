@@ -4,38 +4,22 @@
  * Repository: https://github.com/aquamarine5/ChaoxingSignFaker
  */
 
-import org.aquamarine5.brainspark.stackbricks.gradleplugin.PossibleConfigurationPath
+// 1. 【已删除】顶部的 stackbricks import 语句
 
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
-    id("org.aquamarine5.brainspark.stackbricks-gradle-plugin") version "2.2.7"
+    // 2. 【已注释】移除 stackbricks 插件
+    // id("org.aquamarine5.brainspark.stackbricks-gradle-plugin") version "2.2.7"
     id("com.google.protobuf") version "0.9.6"
-    id "io.sentry.android.gradle" version "6.5.0"
+    // 3. 【已注释】移除 Sentry 插件，避免缺少 AuthToken 报错
+    // id "io.sentry.android.gradle" version "6.5.0"
     id("org.jetbrains.kotlin.plugin.serialization") version "2.3.20"
 }
 
-sentry {
-    org = "aquamarine5"
-    projectName = "chaoxingsignfaker"
-    authToken = System.getenv("SENTRY_AUTH_TOKEN") ?: findProperty("sentry.authToken")
-}
+// 4. 【已删除】原有的 sentry { ... } 配置块
+// 5. 【已删除】原有的 stackbricksConfig { ... } 配置块
 
-stackbricksConfig {
-    possibleConfigurationPaths = [
-            new PossibleConfigurationPath("cdn.aquamarine5.fun", "chaoxingsignfaker_stackbricks_v2_manifest.json")
-    ]
-    changelog = "# 1.13.6 更新：\n1. 支持了群聊签到。\n\n# 1.13.4(.5) 更新：\n1. 修复了有人脸识别的二维码签到的异常崩溃。\n2. 提升了二维码扫描速度。\n\n# 1.13.3 更新：\n- 修复了人脸签到时意外的崩溃BUG。\n\n# 1.13.2 更新：\n- 修复了已经截止的签到被误判为已签到的问题。\n\n# 1.13.1 更新：\n- 测试性的支持了有人脸识别的位置签到。\n\n# 1.13.0 更新：\n- 修复了签到码输入时当签到码是0开头时无法识别的错误。\n\n# 1.12.11 更新：\n- 优化了界面表现，修复了部分已知问题。\n\nlovely but not lonely, 20260502, @aquamarine5 Brainspark."
-    requiredManifestVersion2MigrateForceInstall = true
-    forceInstallLessVersion = 1_1208_1216
-    qiniuConfig {
-        accessKey = project.findProperty("qiniu.accessKey") ?: ""
-        secretKey = project.findProperty("qiniu.secretKey") ?: ""
-        bucket = "aquabucket"
-        referer = project.findProperty("qiniu.referer") ?: ""
-        println("Qiniu config: $accessKey, $secretKey, $bucket, $referer")
-    }
-}
 android {
     namespace = "org.aquamarine5.brainspark.chaoxingsignfaker"
     compileSdk = 37
@@ -53,17 +37,12 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    signingConfigs {
-        create("chaoxingsignfaker") {
-            storeFile file("..\\chaoxingsignfaker.jks")
-            storePassword System.getenv("keystorePassword")
-            keyAlias "chaoxingsignfaker"
-            keyPassword System.getenv("keystorePassword")
-        }
-    }
+    // 6. 【已删除】原有的 signingConfigs 块，因为你没有 chaoxingsignfaker.jks 文件
+
     buildFeatures {
         buildConfig = true
     }
+    
     buildTypes {
         release {
             minifyEnabled true
@@ -72,14 +51,16 @@ android {
                     getDefaultProguardFile("proguard-android-optimize.txt"),
                     "proguard-rules.pro"
             )
-            signingConfig signingConfigs.chaoxingsignfaker
+            // 7. 【已注释】移除自定义签名，使用默认签名
+            // signingConfig signingConfigs.chaoxingsignfaker
             buildConfigField("String", "releaseDate", "\"${new Date().format('yyyy-MM-dd HH:mm:ss')}\"")
-            buildConfigField("String", "UMENG_CHANNEL", "\"${System.getenv("UMENG_CHANNEL")}\"" ?: '"Stackbricks"')
+            buildConfigField("String", "UMENG_CHANNEL", "\"${System.getenv("UMENG_CHANNEL") ?: 'GithubRelease'}\"")
         }
         debug {
-            signingConfig signingConfigs.chaoxingsignfaker
+            // 8. 【已注释】移除自定义签名，使用默认测试签名
+            // signingConfig signingConfigs.chaoxingsignfaker
             buildConfigField("String", "releaseDate", "\"${new Date().format('yyyy-MM-dd HH:mm:ss')}\"")
-            buildConfigField("String", "UMENG_CHANNEL", "\"${System.getenv("UMENG_CHANNEL")}\"" ?: '"Stackbricks"')
+            buildConfigField("String", "UMENG_CHANNEL", "\"${System.getenv("UMENG_CHANNEL") ?: 'GithubRelease'}\"")
         }
     }
 
